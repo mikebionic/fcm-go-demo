@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send FCM Message</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .nav-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            margin: 10px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control.textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-loading {
+            color: transparent;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .response-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .response-success {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .response-error {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            color: white;
+        }
+
+        .token-input {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .quick-fill {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-fill-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-fill-btn:hover {
+            background: #e9ecef;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .icon {
+            display: inline-block;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Send FCM Message</h1>
+            <p>Send push notifications via Firebase Cloud Messaging</p>
+            <a href="index.html" class="nav-link">📱 View Notifications</a>
+        </div>
+
+        <div class="card">
+            <form id="messageForm">
+                <div class="form-group">
+                    <label for="token">
+                        <span class="icon">🔑</span>Device Token
+                    </label>
+                    <input 
+                        type="text" 
+                        id="token" 
+                        name="token" 
+                        class="form-control token-input" 
+                        placeholder="Enter FCM device token..."
+                        required
+                    >
+                    <div class="quick-fill">
+                        <button type="button" class="quick-fill-btn" onclick="fillSampleToken()">
+                            Use Sample Token
+                        </button>
+                        <button type="button" class="quick-fill-btn" onclick="getFromLocalStorage()">
+                            Get from Local Storage
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">
+                        <span class="icon">📋</span>Notification Title
+                    </label>
+                    <input 
+                        type="text" 
+                        id="title" 
+                        name="title" 
+                        class="form-control" 
+                        placeholder="Enter notification title..."
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="body">
+                        <span class="icon">💬</span>Notification Message
+                    </label>
+                    <textarea 
+                        id="body" 
+                        name="body" 
+                        class="form-control textarea" 
+                        placeholder="Enter your message here..."
+                        required
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="btn" id="sendBtn">
+                    <span class="icon">🚀</span>Send Notification
+                </button>
+            </form>
+
+            <div id="response" class="response-section"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('messageForm');
+        const sendBtn = document.getElementById('sendBtn');
+        const responseDiv = document.getElementById('response');
+
+        // Sample token from your Go code
+        const sampleToken = "fC0u_Fm-2xA3N8ibJDfm9D:APA91bEVCrvVbhTG4We2l0UASnWNYjpOGd4cOTQMB9TFb1ZnSFIRsFnm0RPK3QpBu6GOSBqZTPhkuHyrMZ7wZ6OGMSpDN_TKEfHlLoZ8MmgahtOQTwAiUFk";
+
+        function fillSampleToken() {
+            document.getElementById('token').value = sampleToken;
+        }
+
+        function getFromLocalStorage() {
+            // This would typically get the token from the notification page
+            const token = localStorage.getItem('fcm-token');
+            if (token) {
+                document.getElementById('token').value = token;
+            } else {
+                showResponse('error', 'No token found in local storage. Please visit the notification page first.');
+            }
+        }
+
+        function showResponse(type, message) {
+            responseDiv.className = `response-section response-${type} fade-in`;
+            responseDiv.innerHTML = `
+                <strong>${type === 'success' ? '✅ Success!' : '❌ Error!'}</strong><br>
+                ${message}
+            `;
+            responseDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    responseDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function setButtonLoading(loading) {
+            sendBtn.disabled = loading;
+            if (loading) {
+                sendBtn.classList.add('btn-loading');
+                sendBtn.innerHTML = 'Sending...';
+            } else {
+                sendBtn.classList.remove('btn-loading');
+                sendBtn.innerHTML = '<span class="icon">🚀</span>Send Notification';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            setButtonLoading(true);
+            responseDiv.style.display = 'none';
+
+            const formData = new FormData(form);
+            const data = {
+                token: formData.get('token'),
+                title: formData.get('title'),
+                body: formData.get('body')
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/send-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showResponse('success', `Notification sent successfully! Message ID: ${result.messageId || 'Unknown'}`);
+                    form.reset();
+                } else {
+                    showResponse('error', result.error || 'Failed to send notification');
+                }
+            } catch (error) {
+                showResponse('error', `Network error: ${error.message}`);
+            } finally {
+                setButtonLoading(false);
+            }
+        });
+
+        // Pre-fill with sample data for demo purposes
+        document.getElementById('title').value = "🔔 Test Notification";
+        document.getElementById('body').value = "This is a test message from the web interface!";
+    </script>
+</body>
+</html>

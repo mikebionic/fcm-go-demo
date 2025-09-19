@@ -111,6 +111,7 @@ func (s *FCMServer) sendNotificationHandler(w http.ResponseWriter, r *http.Reque
         Token: req.Token,
     }
 
+    // Add custom data if provided
     if req.Data != nil && len(req.Data) > 0 {
         message.Data = req.Data
     }

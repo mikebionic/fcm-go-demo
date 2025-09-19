@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Messaging Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .status-granted {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .status-denied {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            color: white;
+        }
+
+        .status-pending {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .token-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .token-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .token-display {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            color: #666;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .notifications-section {
+            margin-top: 30px;
+        }
+
+        .notifications-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .notification-item:last-child {
+            animation: slideIn 0.5s ease-out, pulse 2s infinite;
+        }
+
+        .notification-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .notification-body {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .error-message {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .nav-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            margin: 10px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            }
+            50% {
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            }
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 Firebase Messaging</h1>
+            <p>Real-time notification display</p>
+            <a href="send-message.html" class="nav-link">📝 Send Message</a>
+        </div>
+
+        <div class="card">
+            <div id="status" class="status-indicator status-pending">
+                <span class="loader"></span>
+                <span style="margin-left: 10px;">Initializing...</span>
+            </div>
+
+            <div class="token-section">
+                <h3>🔑 Device Token</h3>
+                <div id="token" class="token-display">Loading device token...</div>
+            </div>
+
+            <div class="notifications-section">
+                <h3>📱 Received Notifications</h3>
+                <div id="notifications">
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>No notifications yet. Send a test notification!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="error" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.4.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.4.2/firebase-messaging.js"></script>
+    
+    <script>
+        const StatusElem = document.getElementById('status');
+        const TokenElem = document.getElementById('token');
+        const NotificationsElem = document.getElementById('notifications');
+        const ErrorElem = document.getElementById('error');
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "A",
+            authDomain: "B",
+            projectId: "C",
+            storageBucket: "D",
+            messagingSenderId: "E",
+            appId: "F",
+            measurementId: "G"
+        };
+
+
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+
+        function updateStatus(type, message) {
+            StatusElem.className = `status-indicator status-${type}`;
+            StatusElem.innerHTML = message;
+        }
+
+        function showError(message) {
+            ErrorElem.style.display = 'block';
+            ErrorElem.className = 'error-message';
+            ErrorElem.innerHTML = `❌ ${message}`;
+        }
+
+        function addNotification(payload) {
+            const notification = payload.notification || {};
+            const data = payload.data || {};
+            
+            const notificationHtml = `
+                <div class="notification-item">
+                    <div class="notification-title">${notification.title || 'New Notification'}</div>
+                    <div class="notification-body">${notification.body || 'No message content'}</div>
+                    <div class="notification-time">Received at ${new Date().toLocaleString()}</div>
+                </div>
+            `;
+            
+            // Remove empty state if it exists
+            const emptyState = NotificationsElem.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // Add new notification at the top
+            NotificationsElem.insertAdjacentHTML('afterbegin', notificationHtml);
+        }
+
+        // Request permission and get token
+        messaging.requestPermission()
+            .then(() => {
+                updateStatus('granted', '✅ Notification permission granted');
+                return messaging.getToken();
+            })
+            .then((token) => {
+                if (token) {
+                    TokenElem.innerHTML = token;
+                    console.log('Device token:', token);
+                } else {
+                    TokenElem.innerHTML = 'No token available';
+                    showError('Unable to retrieve device token');
+                }
+            })
+            .catch((err) => {
+                updateStatus('denied', '❌ Permission denied');
+                showError(`Unable to get permission: ${err.message}`);
+                console.error('Error:', err);
+            });
+
+        // Handle foreground messages
+        messaging.onMessage((payload) => {
+            console.log('Message received:', payload);
+            
+            // Add to notification display
+            addNotification(payload);
+            
+            // Show browser notification if permission is granted
+            if (Notification.permission === 'granted') {
+                const notification = payload.notification || {};
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    if (registrations.length > 0) {
+                        registrations[0].showNotification(
+                            notification.title || 'New Message',
+                            {
+                                body: notification.body || 'You have a new message',
+                                icon: '/firebase-logo.png',
+                                badge: '/firebase-logo.png',
+                                tag: 'fcm-message',
+                                requireInteraction: true
+                            }
+                        );
+                    }
+                });
+            }
+        });
+
+        // Register service worker for background messages
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then((registration) => {
+                    console.log('Service worker registered:', registration);
+                })
+                .catch((err) => {
+                    console.error('Service worker registration failed:', err);
+                });
+        }
+    </script>
+</body>
+</html>
