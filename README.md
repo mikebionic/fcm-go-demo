@@ -3,6 +3,8 @@
 This project is a simple demonstration of how to integrate and use **Firebase Cloud Messaging (FCM)** with a Go backend and a web client.  
 It was originally prepared as an example for **Google I/O Ashgabat** by Google Developer Group.
 
+> See the slides from [presentation](https://docs.google.com/presentation/d/1jSfSuZX1c6LY6yHQa0_5e2mQhEn3M1xaKuyKUYnFFeQ/edit?slide=id.g38137ad3bcf_0_344#slide=id.g38137ad3bcf_0_344)
+
 The backend (written in Go) exposes an API endpoint to send push notifications to devices using FCM.  
 The frontend (HTML + JS) registers for notifications, obtains the FCM device token, and listens for messages.
 
